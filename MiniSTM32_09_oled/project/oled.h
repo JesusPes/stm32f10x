@@ -20,7 +20,7 @@
 //OLED模式设置
 //0:4线串行模式
 //1:并行8080模式
-#define OLED_MODE 1
+#define OLED_MODE 0
 		    						  
 //-----------------OLED端口定义----------------  					   
 #define OLED_CS PCout(9)

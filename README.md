@@ -3,6 +3,8 @@ stm32f10x
 
 stm32f10x envrionment
 
+* code for stm32f103RBT6
+
 * initial development environment get from: 
 http://www.amobbs.com/thread-874394-1-1.html
 
