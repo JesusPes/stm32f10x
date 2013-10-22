@@ -222,9 +222,15 @@ void OLED_Init(void)
 	GPIOB->CRL|=0XF0000033;
 	GPIOB->ODR|=0X03;
 
+#ifdef RBT6
  	GPIOC->CRH&=0XFFFFFF00;	   
  	GPIOC->CRH|=0X00000033;	 
 	GPIOC->ODR|=3<<8;
+#elif defined(C8T6)
+ 	GPIOB->CRH&=0XFFFFFF00;	   
+ 	GPIOB->CRH|=0X00000033;	 
+	GPIOB->ODR|=3<<8;
+#endif
 #endif
 								  
 	//OLED_RST=0;

@@ -23,6 +23,7 @@
 #define OLED_MODE 0
 		    						  
 //-----------------OLED端口定义----------------  					   
+#if OLED_MODE==1
 #define OLED_CS PCout(9)
 //#define OLED_RST  PBout(14)//在MINISTM32上直接接到了STM32的复位脚！	
 #define OLED_RS PCout(8)
@@ -31,10 +32,24 @@
 
 //PB0~7,作为数据线
 #define DATAOUT(x) GPIOB->ODR=(GPIOB->ODR&0xff00)|(x&0x00FF); //输出
+#else
   
+#define C8T6
+
+#ifdef RBT6
+#define OLED_CS PCout(9)
+//#define OLED_RST  PBout(14)//在MINISTM32上直接接到了STM32的复位脚！	
+#define OLED_RS PCout(8)
+#elif defined(C8T6)
+#define OLED_CS PBout(9)
+//#define OLED_RST  PBout(14)//在MINISTM32上直接接到了STM32的复位脚！	
+#define OLED_RS PBout(8)
+#endif
+
 //使用4线串行接口时使用 
 #define OLED_SCLK PBout(0)
 #define OLED_SDIN PBout(1)
+#endif
 		     
 #define OLED_CMD  0	//写命令
 #define OLED_DATA 1	//写数据
