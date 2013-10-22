@@ -1,0 +1,333 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.file	"exti.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.section	.text.EXTI0_IRQHandler,"ax",%progbits
+  19              		.align	1
+  20              		.global	EXTI0_IRQHandler
+  21              		.thumb
+  22              		.thumb_func
+  24              	EXTI0_IRQHandler:
+  25              	.LFB0:
+  26              		.file 1 "../exti.c"
+   1:../exti.c     **** #include "exti.h"
+   2:../exti.c     **** #include "led.h"
+   3:../exti.c     **** #include "key.h"
+   4:../exti.c     **** #include "delay.h"
+   5:../exti.c     **** #include "usart.h"
+   6:../exti.c     **** //////////////////////////////////////////////////////////////////////////////////	 
+   7:../exti.c     **** //本程序只供学习使用，未经作者许可，不得用于其它任何用途
+   8:../exti.c     **** //Mini STM32开发板
+   9:../exti.c     **** //外部中断 驱动代码			   
+  10:../exti.c     **** //正点原子@ALIENTEK
+  11:../exti.c     **** //技术论坛:www.openedv.com
+  12:../exti.c     **** //修改日期:2010/12/01  
+  13:../exti.c     **** //版本：V1.0
+  14:../exti.c     **** //版权所有，盗版必究。
+  15:../exti.c     **** //Copyright(C) 正点原子 2009-2019
+  16:../exti.c     **** //All rights reserved	  
+  17:../exti.c     **** ////////////////////////////////////////////////////////////////////////////////// 	  
+  18:../exti.c     ****  
+  19:../exti.c     **** 
+  20:../exti.c     **** //外部中断0服务程序
+  21:../exti.c     **** void EXTI0_IRQHandler(void)
+  22:../exti.c     **** {
+  27              		.loc 1 22 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31 0000 08B5     		push	{r3, lr}
+  32              	.LCFI0:
+  33              		.cfi_def_cfa_offset 8
+  34              		.cfi_offset 3, -8
+  35              		.cfi_offset 14, -4
+  23:../exti.c     **** 	delay_ms(10);//消抖
+  36              		.loc 1 23 0
+  37 0002 0A20     		movs	r0, #10
+  38 0004 FFF7FEFF 		bl	delay_ms
+  39              	.LVL0:
+  24:../exti.c     **** 	if(KEY2==1)	 //按键2
+  40              		.loc 1 24 0
+  41 0008 0A4B     		ldr	r3, .L3
+  42 000a 1B68     		ldr	r3, [r3, #0]
+  43 000c 012B     		cmp	r3, #1
+  44 000e 0DD1     		bne	.L2
+  25:../exti.c     **** 	{
+  26:../exti.c     **** 		LED0=!LED0;
+  45              		.loc 1 26 0
+  46 0010 094B     		ldr	r3, .L3+4
+  47 0012 1A68     		ldr	r2, [r3, #0]
+  48 0014 D2F10102 		rsbs	r2, r2, #1
+  49 0018 38BF     		it	cc
+  50 001a 0022     		movcc	r2, #0
+  51 001c 1A60     		str	r2, [r3, #0]
+  27:../exti.c     **** 		LED1=!LED1;	
+  52              		.loc 1 27 0
+  53 001e 074B     		ldr	r3, .L3+8
+  54 0020 1A68     		ldr	r2, [r3, #0]
+  55 0022 D2F10102 		rsbs	r2, r2, #1
+  56 0026 38BF     		it	cc
+  57 0028 0022     		movcc	r2, #0
+  58 002a 1A60     		str	r2, [r3, #0]
+  59              	.L2:
+  28:../exti.c     **** 	}		 
+  29:../exti.c     **** 	EXTI->PR=1<<0;  //清除LINE0上的中断标志位  
+  60              		.loc 1 29 0
+  61 002c 044B     		ldr	r3, .L3+12
+  62 002e 0122     		movs	r2, #1
+  63 0030 5A61     		str	r2, [r3, #20]
+  64 0032 08BD     		pop	{r3, pc}
+  65              	.L4:
+  66              		.align	2
+  67              	.L3:
+  68 0034 00012142 		.word	1109459200
+  69 0038 A0012142 		.word	1109459360
+  70 003c 88812242 		.word	1109557640
+  71 0040 00040140 		.word	1073808384
+  72              		.cfi_endproc
+  73              	.LFE0:
+  75              		.section	.text.EXTI15_10_IRQHandler,"ax",%progbits
+  76              		.align	1
+  77              		.global	EXTI15_10_IRQHandler
+  78              		.thumb
+  79              		.thumb_func
+  81              	EXTI15_10_IRQHandler:
+  82              	.LFB1:
+  30:../exti.c     **** }
+  31:../exti.c     **** 
+  32:../exti.c     **** //外部中断15~10服务程序
+  33:../exti.c     **** void EXTI15_10_IRQHandler(void)
+  34:../exti.c     **** {			
+  83              		.loc 1 34 0
+  84              		.cfi_startproc
+  85              		@ args = 0, pretend = 0, frame = 0
+  86              		@ frame_needed = 0, uses_anonymous_args = 0
+  87 0000 08B5     		push	{r3, lr}
+  88              	.LCFI1:
+  89              		.cfi_def_cfa_offset 8
+  90              		.cfi_offset 3, -8
+  91              		.cfi_offset 14, -4
+  35:../exti.c     **** 	delay_ms(10);    //消抖			 
+  92              		.loc 1 35 0
+  93 0002 0A20     		movs	r0, #10
+  94 0004 FFF7FEFF 		bl	delay_ms
+  95              	.LVL1:
+  36:../exti.c     **** 	if(KEY0==0)      //按键0
+  96              		.loc 1 36 0
+  97 0008 0B4B     		ldr	r3, .L9
+  98 000a 1B68     		ldr	r3, [r3, #0]
+  99 000c 0BB9     		cbnz	r3, .L6
+  37:../exti.c     **** 	{
+  38:../exti.c     **** 		LED0=!LED0;
+ 100              		.loc 1 38 0
+ 101 000e 0B4B     		ldr	r3, .L9+4
+ 102 0010 03E0     		b	.L8
+ 103              	.L6:
+  39:../exti.c     **** 	}else if(KEY1==0)//按键1
+ 104              		.loc 1 39 0
+ 105 0012 0B4B     		ldr	r3, .L9+8
+ 106 0014 1B68     		ldr	r3, [r3, #0]
+ 107 0016 33B9     		cbnz	r3, .L7
+  40:../exti.c     **** 	{
+  41:../exti.c     **** 		LED1=!LED1;
+ 108              		.loc 1 41 0
+ 109 0018 0A4B     		ldr	r3, .L9+12
+ 110              	.L8:
+ 111 001a 1A68     		ldr	r2, [r3, #0]
+ 112 001c D2F10102 		rsbs	r2, r2, #1
+ 113 0020 38BF     		it	cc
+ 114 0022 0022     		movcc	r2, #0
+ 115 0024 1A60     		str	r2, [r3, #0]
+ 116              	.L7:
+  42:../exti.c     **** 	}
+  43:../exti.c     **** 	EXTI->PR=1<<13;     //清除LINE13上的中断标志位  
+ 117              		.loc 1 43 0
+ 118 0026 084B     		ldr	r3, .L9+16
+ 119 0028 4FF40052 		mov	r2, #8192
+ 120 002c 5A61     		str	r2, [r3, #20]
+  44:../exti.c     **** 	EXTI->PR=1<<15;     //清除LINE15上的中断标志位  
+ 121              		.loc 1 44 0
+ 122 002e 4FF40042 		mov	r2, #32768
+ 123 0032 5A61     		str	r2, [r3, #20]
+ 124 0034 08BD     		pop	{r3, pc}
+ 125              	.L10:
+ 126 0036 00BF     		.align	2
+ 127              	.L9:
+ 128 0038 34012142 		.word	1109459252
+ 129 003c A0012142 		.word	1109459360
+ 130 0040 3C012142 		.word	1109459260
+ 131 0044 88812242 		.word	1109557640
+ 132 0048 00040140 		.word	1073808384
+ 133              		.cfi_endproc
+ 134              	.LFE1:
+ 136              		.section	.text.EXTIX_Init,"ax",%progbits
+ 137              		.align	1
+ 138              		.global	EXTIX_Init
+ 139              		.thumb
+ 140              		.thumb_func
+ 142              	EXTIX_Init:
+ 143              	.LFB2:
+  45:../exti.c     **** }
+  46:../exti.c     **** //外部中断初始化程序
+  47:../exti.c     **** //初始化PA0,PA13,PA15为中断输入.
+  48:../exti.c     **** void EXTIX_Init(void)
+  49:../exti.c     **** {
+ 144              		.loc 1 49 0
+ 145              		.cfi_startproc
+ 146              		@ args = 0, pretend = 0, frame = 0
+ 147              		@ frame_needed = 0, uses_anonymous_args = 0
+  50:../exti.c     **** 	RCC->APB2ENR|=1<<2;     //使能PORTA时钟
+ 148              		.loc 1 50 0
+ 149 0000 214B     		ldr	r3, .L12
+  49:../exti.c     **** {
+ 150              		.loc 1 49 0
+ 151 0002 10B5     		push	{r4, lr}
+ 152              	.LCFI2:
+ 153              		.cfi_def_cfa_offset 8
+ 154              		.cfi_offset 4, -8
+ 155              		.cfi_offset 14, -4
+ 156              		.loc 1 50 0
+ 157 0004 9A69     		ldr	r2, [r3, #24]
+  51:../exti.c     **** 	JTAG_Set(JTAG_SWD_DISABLE);//关闭JTAG和SWD   
+ 158              		.loc 1 51 0
+ 159 0006 0220     		movs	r0, #2
+  50:../exti.c     **** 	RCC->APB2ENR|=1<<2;     //使能PORTA时钟
+ 160              		.loc 1 50 0
+ 161 0008 42F00402 		orr	r2, r2, #4
+ 162 000c 9A61     		str	r2, [r3, #24]
+ 163              		.loc 1 51 0
+ 164 000e FFF7FEFF 		bl	JTAG_Set
+ 165              	.LVL2:
+  52:../exti.c     **** 
+  53:../exti.c     **** 	GPIOA->CRL&=0XFFFFFFF0;//PA0设置成输入	  
+ 166              		.loc 1 53 0
+ 167 0012 1E4B     		ldr	r3, .L12+4
+  54:../exti.c     **** 	GPIOA->CRL|=0X00000008;   
+  55:../exti.c     **** 	GPIOA->CRH&=0X0F0FFFFF;//PA13,15设置成输入	  
+  56:../exti.c     **** 	GPIOA->CRH|=0X80800000; 				   
+  57:../exti.c     **** 	GPIOA->ODR|=1<<13;	   //PA13上拉,PA0默认下拉
+  58:../exti.c     **** 	GPIOA->ODR|=1<<15;	   //PA15上拉
+  59:../exti.c     **** 
+  60:../exti.c     **** 	Ex_NVIC_Config(GPIO_A,0,RTIR); //上升沿触发
+ 168              		.loc 1 60 0
+ 169 0014 0020     		movs	r0, #0
+  53:../exti.c     **** 	GPIOA->CRL&=0XFFFFFFF0;//PA0设置成输入	  
+ 170              		.loc 1 53 0
+ 171 0016 1A68     		ldr	r2, [r3, #0]
+ 172              		.loc 1 60 0
+ 173 0018 0146     		mov	r1, r0
+  53:../exti.c     **** 	GPIOA->CRL&=0XFFFFFFF0;//PA0设置成输入	  
+ 174              		.loc 1 53 0
+ 175 001a 22F00F02 		bic	r2, r2, #15
+ 176 001e 1A60     		str	r2, [r3, #0]
+  54:../exti.c     **** 	GPIOA->CRL|=0X00000008;   
+ 177              		.loc 1 54 0
+ 178 0020 1A68     		ldr	r2, [r3, #0]
+ 179 0022 42F00802 		orr	r2, r2, #8
+ 180 0026 1A60     		str	r2, [r3, #0]
+  55:../exti.c     **** 	GPIOA->CRH&=0X0F0FFFFF;//PA13,15设置成输入	  
+ 181              		.loc 1 55 0
+ 182 0028 5A68     		ldr	r2, [r3, #4]
+ 183 002a 22F07042 		bic	r2, r2, #-268435456
+ 184 002e 22F47002 		bic	r2, r2, #15728640
+ 185 0032 5A60     		str	r2, [r3, #4]
+  56:../exti.c     **** 	GPIOA->CRH|=0X80800000; 				   
+ 186              		.loc 1 56 0
+ 187 0034 5A68     		ldr	r2, [r3, #4]
+ 188 0036 42F00042 		orr	r2, r2, #-2147483648
+ 189 003a 42F40002 		orr	r2, r2, #8388608
+ 190 003e 5A60     		str	r2, [r3, #4]
+  57:../exti.c     **** 	GPIOA->ODR|=1<<13;	   //PA13上拉,PA0默认下拉
+ 191              		.loc 1 57 0
+ 192 0040 DA68     		ldr	r2, [r3, #12]
+ 193 0042 42F40052 		orr	r2, r2, #8192
+ 194 0046 DA60     		str	r2, [r3, #12]
+  58:../exti.c     **** 	GPIOA->ODR|=1<<15;	   //PA15上拉
+ 195              		.loc 1 58 0
+ 196 0048 DA68     		ldr	r2, [r3, #12]
+ 197 004a 42F40042 		orr	r2, r2, #32768
+ 198 004e DA60     		str	r2, [r3, #12]
+ 199              		.loc 1 60 0
+ 200 0050 0222     		movs	r2, #2
+ 201 0052 FFF7FEFF 		bl	Ex_NVIC_Config
+ 202              	.LVL3:
+  61:../exti.c     **** 	Ex_NVIC_Config(GPIO_A,13,FTIR);//下降沿触发
+ 203              		.loc 1 61 0
+ 204 0056 0020     		movs	r0, #0
+ 205 0058 0D21     		movs	r1, #13
+ 206 005a 0122     		movs	r2, #1
+ 207 005c FFF7FEFF 		bl	Ex_NVIC_Config
+ 208              	.LVL4:
+  62:../exti.c     **** 	Ex_NVIC_Config(GPIO_A,15,FTIR);//下降沿触发
+ 209              		.loc 1 62 0
+ 210 0060 0020     		movs	r0, #0
+ 211 0062 0F21     		movs	r1, #15
+ 212 0064 0122     		movs	r2, #1
+ 213 0066 FFF7FEFF 		bl	Ex_NVIC_Config
+ 214              	.LVL5:
+  63:../exti.c     **** 
+  64:../exti.c     **** 	MY_NVIC_Init(2,2,EXTI0_IRQChannel,2);    //抢占2，子优先级2，组2
+ 215              		.loc 1 64 0
+ 216 006a 0220     		movs	r0, #2
+ 217 006c 0146     		mov	r1, r0
+ 218 006e 0622     		movs	r2, #6
+ 219 0070 0346     		mov	r3, r0
+ 220 0072 FFF7FEFF 		bl	MY_NVIC_Init
+ 221              	.LVL6:
+  65:../exti.c     **** 	MY_NVIC_Init(2,1,EXTI15_10_IRQChannel,2);//抢占2，子优先级1，组2	   
+ 222              		.loc 1 65 0
+ 223 0076 0220     		movs	r0, #2
+ 224 0078 0121     		movs	r1, #1
+ 225 007a 2822     		movs	r2, #40
+ 226 007c 0346     		mov	r3, r0
+  66:../exti.c     **** }
+ 227              		.loc 1 66 0
+ 228 007e BDE81040 		pop	{r4, lr}
+  65:../exti.c     **** 	MY_NVIC_Init(2,1,EXTI15_10_IRQChannel,2);//抢占2，子优先级1，组2	   
+ 229              		.loc 1 65 0
+ 230 0082 FFF7FEBF 		b	MY_NVIC_Init
+ 231              	.LVL7:
+ 232              	.L13:
+ 233 0086 00BF     		.align	2
+ 234              	.L12:
+ 235 0088 00100240 		.word	1073876992
+ 236 008c 00080140 		.word	1073809408
+ 237              		.cfi_endproc
+ 238              	.LFE2:
+ 240              		.text
+ 241              	.Letext0:
+ 242              		.file 2 "../stm32f10x_type.h"
+ 243              		.file 3 "../stm32f10x_map.h"
+ 244              		.file 4 "../delay.h"
+ 245              		.file 5 "../sys.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 exti.c
+     /tmp/cc8x6qE5.s:19     .text.EXTI0_IRQHandler:00000000 $t
+     /tmp/cc8x6qE5.s:24     .text.EXTI0_IRQHandler:00000000 EXTI0_IRQHandler
+     /tmp/cc8x6qE5.s:68     .text.EXTI0_IRQHandler:00000034 $d
+     /tmp/cc8x6qE5.s:76     .text.EXTI15_10_IRQHandler:00000000 $t
+     /tmp/cc8x6qE5.s:81     .text.EXTI15_10_IRQHandler:00000000 EXTI15_10_IRQHandler
+     /tmp/cc8x6qE5.s:128    .text.EXTI15_10_IRQHandler:00000038 $d
+     /tmp/cc8x6qE5.s:137    .text.EXTIX_Init:00000000 $t
+     /tmp/cc8x6qE5.s:142    .text.EXTIX_Init:00000000 EXTIX_Init
+     /tmp/cc8x6qE5.s:235    .text.EXTIX_Init:00000088 $d
+                     .debug_frame:00000010 $d
+
+UNDEFINED SYMBOLS
+delay_ms
+JTAG_Set
+Ex_NVIC_Config
+MY_NVIC_Init

@@ -1,0 +1,529 @@
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 18, 4
+  12              		.thumb
+  13              		.file	"lcd.c"
+  21              	.Ltext0:
+  22              		.section	.text.convert,"ax",%progbits
+  23              		.align	2
+  24              		.global	convert
+  25              		.thumb
+  26              		.thumb_func
+  28              	convert:
+  29              	.LFB2:
+  30              		.file 1 "../lcd.c"
+   1:../lcd.c      **** /******************** (C) COPYRIGHT 2007 STMicroelectronics ********************
+   2:../lcd.c      **** * File Name          : main.c
+   3:../lcd.c      **** * Author             : David JIANG
+   4:../lcd.c      **** * Date First Issued  : 2007.9.17
+   5:../lcd.c      **** * Description        : main
+   6:../lcd.c      **** *
+   7:../lcd.c      **** ********************************************************************************
+   8:../lcd.c      **** * History:
+   9:../lcd.c      **** * 2007.9.17 : Version 1.0
+  10:../lcd.c      **** ********************************************************************************
+  11:../lcd.c      **** * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+  12:../lcd.c      **** * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
+  13:../lcd.c      **** * AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
+  14:../lcd.c      **** * INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
+  15:../lcd.c      **** * CONTENT OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
+  16:../lcd.c      **** * INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  17:../lcd.c      **** *******************************************************************************/
+  18:../lcd.c      **** 
+  19:../lcd.c      **** /* Includes ------------------------------------------------------------------*/
+  20:../lcd.c      **** #include "stm32f10x_lib.h"
+  21:../lcd.c      **** #include "lcd.h"
+  22:../lcd.c      **** /* Private typedef -----------------------------------------------------------*/
+  23:../lcd.c      **** /* Private define ------------------------------------------------------------*/
+  24:../lcd.c      **** /* Private macro -------------------------------------------------------------*/
+  25:../lcd.c      **** /* Private variables ---------------------------------------------------------*/
+  26:../lcd.c      **** u16  frame[4];    /* LCD frame buffer  */
+  27:../lcd.c      **** u16  digit[4];    /* Digit frame buffer */  
+  28:../lcd.c      **** char text[2];
+  29:../lcd.c      **** 
+  30:../lcd.c      **** /*the varitronix LCD digit is:
+  31:../lcd.c      **** 
+  32:../lcd.c      ****                A
+  33:../lcd.c      ****       --  ----------
+  34:../lcd.c      ****     X \/  |\   |I  /|
+  35:../lcd.c      ****          F| H  |  J |B
+  36:../lcd.c      ****           |  \ | /  |
+  37:../lcd.c      ****           --G-- --K--
+  38:../lcd.c      ****           |   /| \  |
+  39:../lcd.c      ****         E |  L |  N |C
+  40:../lcd.c      ****           | /  |M  \|   _
+  41:../lcd.c      ****           -----------  | |DP   
+  42:../lcd.c      ****               D         -
+  43:../lcd.c      **** 
+  44:../lcd.c      ****         PE0  PE1  PE2  PE3  ...................................................... PE15
+  45:../lcd.c      **** ----------------------------------------------------------------------------------------
+  46:../lcd.c      **** |      | S0 | S1 | S2 | S3 | S4 | S5 | S6 | S7 | S8 | S9 | S10| S11| S12| S13| S14| S15|
+  47:../lcd.c      **** ----------------------------------------------------------------------------------------
+  48:../lcd.c      **** | COM1 | 1X | 1I | 1A | 1DP| 2X | 2I | 2A | 2DP| 3X | 3I | 3A | 3DP| 4X | 4I | 4A | 4DP|
+  49:../lcd.c      **** ----------------------------------------------------------------------------------------
+  50:../lcd.c      **** | COM2 | 1F | 1H | 1J | 1B | 2F | 2H | 2J | 2B | 3F | 3H | 3J | 3B | 4F | 4H | 4J | 4B |
+  51:../lcd.c      **** ----------------------------------------------------------------------------------------
+  52:../lcd.c      **** | COM3 | 1E | 1G | 1K | 1C | 2E | 2G | 2K | 2C | 3E | 3G | 3K | 3C | 4E | 4G | 4K | 4C |
+  53:../lcd.c      **** ----------------------------------------------------------------------------------------
+  54:../lcd.c      **** | COM4 | 1L | 1M | 1N | 1D | 2L | 2M | 2N | 2D | 3L | 3M | 3N | 3D | 4L | 4M | 4N | 4D |
+  55:../lcd.c      **** ----------------------------------------------------------------------------------------
+  56:../lcd.c      **** 
+  57:../lcd.c      **** A LCD character coding is based on the following matrix:
+  58:../lcd.c      **** 
+  59:../lcd.c      **** { X , F , E , L  }
+  60:../lcd.c      **** { I , H , G , M  }
+  61:../lcd.c      **** { A , J , K , N  }
+  62:../lcd.c      **** { DP, B , C , D  }
+  63:../lcd.c      **** 
+  64:../lcd.c      **** The characher A for example is:
+  65:../lcd.c      **** 
+  66:../lcd.c      ****  { 0 , 1 , 1 , 0 }
+  67:../lcd.c      ****  { 0 , 0 , 1 , 0 }
+  68:../lcd.c      ****  { 1 , 0 , 1 , 0 }
+  69:../lcd.c      ****  { 0 , 1 , 1 , 0 }
+  70:../lcd.c      **** -------------------
+  71:../lcd.c      **** =  4   9   F   0   hex
+  72:../lcd.c      **** 
+  73:../lcd.c      **** => 'A' = 0x4E70  */
+  74:../lcd.c      **** 
+  75:../lcd.c      **** const u16 letter[26]={0x49F0,0x01F8,0x4118,0x08F8,0x4178,0x4170,0x41D8,0x09F0,0x600A,
+  76:../lcd.c      **** 		      0x0888,0x0534,0x0118,0x0F90,0x0B94,0x4998,0x4970,0x499C,0x4974,
+  77:../lcd.c      **** 		      0x41E8,0x6002,0x0998,0x0511,0x299A,0x0605,0x0601,0x4409};
+  78:../lcd.c      **** 
+  79:../lcd.c      **** const u16 number[10]={0x4998,0x0880,0x4878,0x48E8,0x09E0,0x41E8,0x41F8,0x4880,0x49F8,0x49E8};
+  80:../lcd.c      **** 
+  81:../lcd.c      **** const u16 arrow[2]={0x0005,0x0600}; // {Upstair,Downstair}
+  82:../lcd.c      **** 
+  83:../lcd.c      **** /* Private function prototypes -----------------------------------------------*/
+  84:../lcd.c      **** /* Private functions ---------------------------------------------------------*/
+  85:../lcd.c      **** 
+  86:../lcd.c      **** /*******************************************************************************
+  87:../lcd.c      **** * Function Name  : convert
+  88:../lcd.c      **** * Description    : converts an ascii char to the a LCD digit (previous coding)
+  89:../lcd.c      **** * Input1         : char
+  90:../lcd.c      **** * Input2         : point : flag indicating if a point has to be add in front of
+  91:../lcd.c      **** *                  displayed character (0: no, 1: yes)
+  92:../lcd.c      **** * Output         : None
+  93:../lcd.c      **** * Return         : None
+  94:../lcd.c      **** *******************************************************************************/
+  95:../lcd.c      **** void convert (char* c,u8 point)
+  96:../lcd.c      **** { 
+  31              	end = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+  34              	.LVL0:
+  35              		.loc 1 102 0
+  97:../lcd.c      ****   u16 car=0,tmp;
+  98:../lcd.c      ****   u8 i;
+  99:../lcd.c      ****   const u16 mask[4]={0xF000,0x0F00,0x00F0,0x000F};
+ 100:../lcd.c      ****   const u8 shift[3]={0xC,0x8,0x4};
+ 101:../lcd.c      **** 
+ 102:../lcd.c      ****   if ((*c<0x5B)&(*c>0x40))  // 'A' --- 'F'
+  36              		r2, [r0, #0]	@ zero_extendqisi2
+  37 0000 0278     		.loc 1 96 0
+  38              		@ lr needed for prologue
+  39              		.loc 1 102 0
+  40              		sub	r3, r2, #65
+  41 0002 A2F14103 		uxtb	r3, r3
+  42 0006 DBB2     		cmp	r3, #25
+  43 0008 192B     		bhi	.L2
+  44 000a 05D8     		.loc 1 103 0
+ 103:../lcd.c      ****     car = letter[*c-0x41]; 
+  45              	.L15
+  46 000c 164B     		add	r3, r3, r2, lsl #1
+  47 000e 03EB4203 		ldrh	r0, [r3, #-130]
+  48 0012 33F8820C 	.LVL1:
+  49              		b	.L4
+  50 0016 16E0     	.LVL2:
+  51              	.L2:
+  52              		.loc 1 104 0
+ 104:../lcd.c      ****   else if ((*c<0x3A)&(*c>0x2F))  // '0' --- '9'
+  53              	 r2, #48
+  54 0018 A2F13003 		uxtb	r3, r3
+  55 001c DBB2     		cmp	r3, #9
+  56 001e 092B     		bhi	.L5
+  57 0020 05D8     		.loc 1 105 0
+ 105:../lcd.c      ****     car = number[*c-0x30];
+  58              	r3, .L15+4
+  59 0022 124B     		add	r3, r3, r2, lsl #1
+  60 0024 03EB4203 		ldrh	r0, [r3, #-96]
+  61 0028 33F8600C 	.LVL3:
+  62              		b	.L4
+  63 002c 0BE0     	.LVL4:
+  64              	.L5:
+  65              		.loc 1 106 0
+ 106:../lcd.c      ****   else if (*c==0x20) car =0;     // 'space'
+  66              	 #32
+  67 002e 202A     		beq	.L7
+  68 0030 08D0     		.loc 1 107 0
+ 107:../lcd.c      ****   else if (*c=='+')  car = arrow[0];   // upstair     
+  69              	p	r2, #43
+  70 0032 2B2A     		bne	.L9
+  71 0034 01D1     		movs	r0, #5
+  72 0036 0520     	.LVL5:
+  73              		b	.L4
+  74 0038 05E0     	.LVL6:
+  75              	.L9:
+  76              		.loc 1 108 0
+ 108:../lcd.c      ****   else if (*c=='-')  car = arrow[1];   // downstair  
+  77              	 #45
+  78 003a 2D2A     		bne	.L7
+  79 003c 02D1     		mov	r0, #1536
+  80 003e 4FF4C060 	.LVL7:
+  81              		b	.L4
+  82 0042 00E0     	.LVL8:
+  83              	.L7:
+  84              		movs	r0, #0
+  85 0044 0020     	.LVL9:
+  86              	.L4:
+  87              		.loc 1 110 0
+ 109:../lcd.c      ****   
+ 110:../lcd.c      ****   if (point==1) car|=0x8000;
+  88              	
+  89 0046 0129     		it	eq
+  90 0048 08BF     		orreq	r0, r0, #32768
+  91 004a 40F40040 		.loc 1 115 0
+ 111:../lcd.c      ****   
+ 112:../lcd.c      ****   for (i=0;i<3;i++)
+ 113:../lcd.c      ****   {
+ 114:../lcd.c      ****     tmp = car&mask[i];
+ 115:../lcd.c      ****     digit[i] = tmp>>shift[i];
+  92              	r	r2, .L15+8
+  93 004e 084A     		lsrs	r3, r0, #12
+  94 0050 030B     		strh	r3, [r2, #0]	@ movhi
+  95 0052 1380     		ubfx	r3, r0, #8, #4
+  96 0054 C0F30323 		strh	r3, [r2, #2]	@ movhi
+  97 0058 5380     		ubfx	r3, r0, #4, #4
+  98 005a C0F30313 		strh	r3, [r2, #4]	@ movhi
+  99 005e 9380     		.loc 1 117 0
+ 116:../lcd.c      ****   }
+ 117:../lcd.c      ****   digit[3] = (car&mask[3]); 
+ 100              	 r0, #15
+ 101 0060 00F00F03 		strh	r3, [r2, #6]	@ movhi
+ 102 0064 D380     		.loc 1 118 0
+ 118:../lcd.c      **** }
+ 103              		lr
+ 104 0066 7047     	.L16:
+ 105              		.align	2
+ 106              	.L15:
+ 107              		.word	.LANCHOR0
+ 108 0068 00000000 		.word	.LANCHOR1
+ 109 006c 00000000 		.word	digit
+ 110 0070 00000000 	.LFE2:
+ 112              		.section	.text.write_char,"ax",%progbits
+ 113              		.align	2
+ 114              		.global	write_char
+ 115              		.thumb
+ 116              		.thumb_func
+ 118              	write_char:
+ 119              	.LFB3:
+ 120              		.loc 1 130 0
+ 119:../lcd.c      **** 
+ 120:../lcd.c      **** /*******************************************************************************
+ 121:../lcd.c      **** * Function Name  : write char
+ 122:../lcd.c      **** * Description    : This function writes a char in the LCD frame buffer
+ 123:../lcd.c      **** * Input1         : char ascii value
+ 124:../lcd.c      **** * Input2         : point 0: no point to add, 1 a point to add in front of char 
+ 125:../lcd.c      **** * Input2         : pos: position of the caracter to write [0:3]
+ 126:../lcd.c      **** * Output         : None
+ 127:../lcd.c      **** * Return         : None
+ 128:../lcd.c      **** *******************************************************************************/
+ 129:../lcd.c      **** void write_char(char* car,u8 point,u8 pos)
+ 130:../lcd.c      **** {
+ 121              	nd = 0, frame = 0
+ 122              		@ frame_needed = 0, uses_anonymous_args = 0
+ 123              	.LVL10:
+ 124              		push	{r4, lr}
+ 125 0000 10B5     	.LCFI0:
+ 126              		.loc 1 130 0
+ 127              		mov	r4, r2
+ 128 0002 1446     		.loc 1 134 0
+ 131:../lcd.c      ****    int i;
+ 132:../lcd.c      ****    const u16 mask[4]={0x0F,0xF0,0xF00,0xF000};
+ 133:../lcd.c      **** 
+ 134:../lcd.c      ****    convert(car,point);
+ 129              	ert
+ 130 0004 FFF7FEFF 	.LVL11:
+ 131              		.loc 1 136 0
+ 135:../lcd.c      ****    
+ 136:../lcd.c      ****    if (pos == 1) for (i=0;i<4;i++) digit[i]=(digit[i]<<4);
+ 132              	p	r4, #1
+ 133 0008 012C     		bne	.L18
+ 134 000a 08D1     		movs	r1, #0
+ 135 000c 0021     	.L20:
+ 136              		ldr	r2, .L28
+ 137 000e 1E4A     		ldrh	r3, [r1, r2]
+ 138 0010 8B5A     		lsls	r3, r3, #4
+ 139 0012 1B01     		strh	r3, [r1, r2]	@ movhi
+ 140 0014 8B52     		adds	r1, r1, #2
+ 141 0016 0231     		cmp	r1, #8
+ 142 0018 0829     		bne	.L20
+ 143 001a F8D1     		b	.L21
+ 144 001c 14E0     	.L18:
+ 145              		.loc 1 137 0
+ 137:../lcd.c      ****    if (pos == 2) for (i=0;i<4;i++) digit[i]=(digit[i]<<8); 
+ 146              	ne	.L22
+ 147 001e 022C     		movs	r1, #0
+ 148 0020 08D1     	.L24:
+ 149 0022 0021     		ldr	r2, .L28
+ 150              		ldrh	r3, [r1, r2]
+ 151 0024 184A     		lsls	r3, r3, #8
+ 152 0026 8B5A     		strh	r3, [r1, r2]	@ movhi
+ 153 0028 1B02     		adds	r1, r1, #2
+ 154 002a 8B52     		cmp	r1, #8
+ 155 002c 0231     		bne	.L24
+ 156 002e 0829     		b	.L21
+ 157 0030 F8D1     	.L22:
+ 158 0032 09E0     		.loc 1 138 0
+ 159              		cmp	r4, #3
+ 138:../lcd.c      ****    if (pos == 3) for (i=0;i<4;i++) digit[i]=(digit[i]<<12); 
+ 160              	s	r1, #0
+ 161 0034 032C     	.L26:
+ 162 0036 07D1     		ldr	r2, .L28
+ 163 0038 0021     		ldrh	r3, [r1, r2]
+ 164              		lsls	r3, r3, #12
+ 165 003a 134A     		strh	r3, [r1, r2]	@ movhi
+ 166 003c 8B5A     		adds	r1, r1, #2
+ 167 003e 1B03     		cmp	r1, #8
+ 168 0040 8B52     		bne	.L26
+ 169 0042 0231     	.L21:
+ 170 0044 0829     		.loc 1 140 0
+ 171 0046 F8D1     		ldr	r3, .L28+4
+ 172              		ldr	r0, .L28+8
+ 139:../lcd.c      ****    
+ 140:../lcd.c      ****    for (i=0;i<4;i++) frame[i]= (frame[i]&~mask[pos])|digit[i];   
+ 173              	, r4, lsl #1]
+ 174 0048 104B     		ldr	r4, .L28
+ 175 004a 1148     	.LVL12:
+ 176 004c 33F81410 		ldrh	r3, [r0, #0]
+ 177 0050 0D4C     		mvns	r1, r1
+ 178              		uxth	r1, r1
+ 179 0052 0388     		ldrh	r2, [r4, #0]
+ 180 0054 C943     		and	r3, r1, r3
+ 181 0056 89B2     		orrs	r3, r3, r2
+ 182 0058 2288     		strh	r3, [r0, #0]	@ movhi
+ 183 005a 01EA0303 		ldrh	r3, [r0, #2]
+ 184 005e 1343     		ldrh	r2, [r4, #2]
+ 185 0060 0380     		and	r3, r1, r3
+ 186 0062 4388     		orrs	r3, r3, r2
+ 187 0064 6288     		strh	r3, [r0, #2]	@ movhi
+ 188 0066 01EA0303 		ldrh	r3, [r0, #4]
+ 189 006a 1343     		ldrh	r2, [r4, #4]
+ 190 006c 4380     		and	r3, r1, r3
+ 191 006e 8388     		orrs	r3, r3, r2
+ 192 0070 A288     		strh	r3, [r0, #4]	@ movhi
+ 193 0072 01EA0303 		ldrh	r3, [r0, #6]
+ 194 0076 1343     		ands	r1, r1, r3
+ 195 0078 8380     		ldrh	r3, [r4, #6]
+ 196 007a C388     		orrs	r1, r1, r3
+ 197 007c 1940     		strh	r1, [r0, #6]	@ movhi
+ 198 007e E388     		.loc 1 141 0
+ 199 0080 1943     		pop	{r4, pc}
+ 200 0082 C180     	.L29:
+ 141:../lcd.c      **** }
+ 201              	
+ 202 0084 10BD     		.word	.LANCHOR2
+ 203              		.word	frame
+ 204 0086 C046     	.LFE3:
+ 206 0088 00000000 		.section	.text.write_string,"ax",%progbits
+ 207 008c 00000000 		.align	2
+ 208 0090 00000000 		.global	write_string
+ 209              		.thumb
+ 210              		.thumb_func
+ 212              	write_string:
+ 213              	.LFB4:
+ 214              		.loc 1 152 0
+ 215              		@ args = 0, pretend = 0, frame = 0
+ 216              		@ frame_needed = 0, uses_anonymous_args = 0
+ 217              	.LVL13:
+ 218              		push	{r4, r5, r6, lr}
+ 142:../lcd.c      **** 
+ 143:../lcd.c      **** 
+ 144:../lcd.c      **** /*******************************************************************************
+ 145:../lcd.c      **** * Function Name  : write_string
+ 146:../lcd.c      **** * Description    : This function writes a string in the LCD
+ 147:../lcd.c      **** * Input          : string
+ 148:../lcd.c      **** * Output         : None
+ 149:../lcd.c      **** * Return         : None
+ 150:../lcd.c      **** *******************************************************************************/
+ 151:../lcd.c      **** void write_string(char* str)
+ 152:../lcd.c      **** {
+ 219              	52 0
+ 220              		mov	r5, r0
+ 221              		movs	r4, #0
+ 222              	.LVL14:
+ 223 0000 70B5     	.L31:
+ 224              		.loc 1 154 0
+ 225              		adds	r0, r5, r4
+ 226 0002 0546     		movs	r1, #0
+ 227 0004 0024     		uxtb	r2, r4
+ 228              	.LVL15:
+ 229              		adds	r4, r4, #1
+ 153:../lcd.c      ****   int i;
+ 154:../lcd.c      ****   for (i=0;i<4;i++) write_char(str+i,0,i);
+ 230              		write_char
+ 231 0006 2819     		cmp	r4, #4
+ 232 0008 0021     		bne	.L31
+ 233 000a E2B2     		.loc 1 155 0
+ 234              		pop	{r4, r5, r6, pc}
+ 235 000c 0134     	.LFE4:
+ 237 000e FFF7FEFF 		.section	.text.int2char,"ax",%progbits
+ 238 0012 042C     		.align	2
+ 239 0014 F7D1     		.global	int2char
+ 155:../lcd.c      **** }
+ 240              	thumb_func
+ 242              	int2char:
+ 243              	.LFB5:
+ 244              		.loc 1 165 0
+ 245              		@ args = 0, pretend = 0, frame = 0
+ 246              		@ frame_needed = 0, uses_anonymous_args = 0
+ 247              	.LVL17:
+ 248              		push	{r4, lr}
+ 249              	.LCFI2:
+ 250              		.loc 1 166 0
+ 251              		movs	r3, #10
+ 156:../lcd.c      ****  
+ 157:../lcd.c      **** /*******************************************************************************
+ 158:../lcd.c      **** * Function Name  : int2char
+ 159:../lcd.c      **** * Description    : This function convertes a 2 digit int to a char
+ 160:../lcd.c      **** * Input          : u8 value
+ 161:../lcd.c      **** * Output         : None
+ 162:../lcd.c      **** * Return         : None
+ 163:../lcd.c      **** *******************************************************************************/
+ 164:../lcd.c      **** char* int2char(u8 value)
+ 165:../lcd.c      **** { 
+ 252              	0
+ 253              		mov	r4, r0
+ 254              		.loc 1 166 0
+ 255              		udiv	r1, r4, r3
+ 256 0000 10B5     		.loc 1 167 0
+ 257              		mls	r3, r1, r3, r4
+ 166:../lcd.c      ****   text[0] = 0x30 + (value/10);
+ 258              	1 166 0
+ 259 0002 0A23     		ldr	r0, .L36
+ 260              	.LVL18:
+ 261 0004 0446     		add	r2, r1, #48
+ 262              		.loc 1 167 0
+ 263 0006 B4FBF3F1 		adds	r3, r3, #48
+ 167:../lcd.c      ****   text[1] = 0x30 + (value%10);
+ 264              	1 166 0
+ 265 000a 01FB1343 		strb	r2, [r0, #0]
+ 266              		.loc 1 167 0
+ 267 000e 0348     		strb	r3, [r0, #1]
+ 268              		.loc 1 169 0
+ 269 0010 01F13002 		pop	{r4, pc}
+ 270              	.L37:
+ 271 0014 3033     		.align	2
+ 272              	.L36:
+ 273 0016 0270     		.word	text
+ 274              	.LFE5:
+ 168:../lcd.c      ****   return(text);
+ 169:../lcd.c      **** }
+ 276              	ter
+ 277 001a 10BD     		.global	number
+ 278              		.global	arrow
+ 279              		.comm	frame,8,2
+ 280              		.comm	digit,8,2
+ 281 001c 00000000 		.comm	text,2,1
+ 282              		.section	.rodata.number,"a",%progbits
+ 283              		.align	1
+ 284              		.set	.LANCHOR1,. + 0
+ 287              	number:
+ 288              		.short	18840
+ 289              		.short	2176
+ 290              		.short	18552
+ 291              		.short	18664
+ 292              		.short	2528
+ 293              		.short	16872
+ 294              		.short	16888
+ 295              		.short	18560
+ 296 0000 9849     		.short	18936
+ 297 0002 8008     		.short	18920
+ 298 0004 7848     		.section	.rodata.letter,"a",%progbits
+ 299 0006 E848     		.align	1
+ 300 0008 E009     		.set	.LANCHOR0,. + 0
+ 303 000e 8048     	letter:
+ 304 0010 F849     		.short	18928
+ 305 0012 E849     		.short	504
+ 306              		.short	16664
+ 307              		.short	2296
+ 308              		.short	16760
+ 309              		.short	16752
+ 310              		.short	16856
+ 311              		.short	2544
+ 312 0000 F049     		.short	24586
+ 313 0002 F801     		.short	2184
+ 314 0004 1841     		.short	1332
+ 315 0006 F808     		.short	280
+ 316 0008 7841     		.short	3984
+ 317 000a 7041     		.short	2964
+ 318 000c D841     		.short	18840
+ 319 000e F009     		.short	18800
+ 320 0010 0A60     		.short	18844
+ 321 0012 8808     		.short	18804
+ 322 0014 3405     		.short	16872
+ 323 0016 1801     		.short	24578
+ 324 0018 900F     		.short	2456
+ 325 001a 940B     		.short	1297
+ 326 001c 9849     		.short	10650
+ 327 001e 7049     		.short	1541
+ 328 0020 9C49     		.short	1537
+ 329 0022 7449     		.short	17417
+ 330 0024 E841     		.section	.rodata.mask.2633,"a",%progbits
+ 331 0026 0260     		.align	1
+ 332 0028 9809     		.set	.LANCHOR2,. + 0
+ 335 002e 0506     	mask.2633:
+ 336 0030 0106     		.short	15
+ 337 0032 0944     		.short	240
+ 338              		.short	3840
+ 339              		.short	-4096
+ 340              		.section	.rodata.arrow,"a",%progbits
+ 341              		.align	1
+ 344 0000 0F00     	arrow:
+ 345 0002 F000     		.short	5
+ 346 0004 000F     		.short	1536
+ 347 0006 00F0     		.section	.debug_frame,"",%progbits
+ 348              	.Lframe0:
+ 349              		.4byte	.LECIE0-.LSCIE0
+ 350              	.LSCIE0:
+ 351              		.4byte	0xffffffff
+ 352              		.byte	0x1
+ 353 0000 0500     		.ascii	"\000"
+ 354 0002 0006     		.uleb128 0x1
+ 431              		.4byte	.LVL2
+DEFINED SYMBOLS
+                            *ABS*:00000000 lcd.c
+                            .text:00000000 $t
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:28     .text.convert:00000000 convert
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:25     .text.convert:00000000 $t
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:108    .text.convert:00000068 $d
+                            *COM*:00000008 digit
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:119    .text.write_char:00000000 write_char
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:116    .text.write_char:00000000 $t
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:206    .text.write_char:00000088 $d
+                            *COM*:00000008 frame
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:217    .text.write_string:00000000 write_string
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:214    .text.write_string:00000000 $t
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:250    .text.int2char:00000000 int2char
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:247    .text.int2char:00000000 $t
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:281    .text.int2char:0000001c $d
+                            *COM*:00000002 text
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:311    .rodata.letter:00000000 letter
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:295    .rodata.number:00000000 number
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:352    .rodata.arrow:00000000 arrow
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:296    .rodata.number:00000000 $d
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:312    .rodata.letter:00000000 $d
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:343    .rodata.mask.2633:00000000 mask.2633
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:344    .rodata.mask.2633:00000000 $d
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:353    .rodata.arrow:00000000 $d
+C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp/ccAjaaaa.s:435    .debug_loc:00000000 $d
+
+NO UNDEFINED SYMBOLS
