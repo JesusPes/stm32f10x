@@ -130,10 +130,10 @@ void MYRCC_DeInit(void)
 //采用如下方法实现执行汇编指令WFI
 //CHECK OK
 //091209
-///__asm void WFI_SET(void)
-//{
-//	WFI;    
-//}
+void WFI_SET(void)
+{
+    asm("wfi");    
+}
 ///进入待机模式	 
 //check ok 
 //091202
@@ -144,7 +144,7 @@ void Sys_Standby(void)
  	PWR->CSR|=1<<8;          //设置WKUP用于唤醒
 	PWR->CR|=1<<2;           //清除Wake-up 标志
 	PWR->CR|=1<<1;           //PDDS置位		  
-//	WFI_SET();				 //执行WFI指令		 
+	WFI_SET();				 //执行WFI指令		 
 }	  
 //后备寄存器写入操作
 //reg:寄存器编号
@@ -236,31 +236,4 @@ void Stm32_Clock_Init(u8 PLL)
 		temp&=0x03;
 	}    
 }		    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
