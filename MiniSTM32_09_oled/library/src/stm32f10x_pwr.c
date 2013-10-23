@@ -22,6 +22,8 @@
 #include "stm32f10x_pwr.h"
 #include "stm32f10x_rcc.h"
 
+#define assert assert_param
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* --------- PWR registers bit address in the alias region ---------- */
