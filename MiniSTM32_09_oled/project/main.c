@@ -44,14 +44,29 @@ typedef enum {FAILED = 0, PASSED = !FAILED} TestStatus;
 //#include "pwm.h"
 #include "oled.h"
 
+//#include <stm32f10x_map.h>
+//#include <stm32f10x_nvic.h>   
+
+void gpio_init(void)
+{
+    GPIOA->CRL = 0;
+    GPIOA->CRH = 0;
+    GPIOB->CRL = 0;
+    GPIOB->CRH = 0;
+    GPIOC->CRL = 0;
+    GPIOC->CRH = 0;
+}
+
 int main(void)
 {		
  	u8 t=0;	    	
- 	Stm32_Clock_Init(9); //ÏµÍ³Ê±ÖÓÉèÖÃ
-	delay_init(72);	     //ÑÓÊ±³õÊ¼»¯
-	uart_init(72,9600);  //´®¿Ú³õÊ¼»¯ 
-	LED_Init();		  	 //³õÊ¼»¯ÓëLEDÁ¬½ÓµÄÓ²¼þ½Ó¿Ú
+    u8 sys_clk_div8 = 2;
+ 	Stm32_Clock_Init(sys_clk_div8); //ÏµÍ³Ê±ÖÓÉèÖÃ
+	delay_init(sys_clk_div8 << 3);	     //ÑÓÊ±³õÊ¼»¯
+//	uart_init(sys_clk_div8 << 3,9600);  //´®¿Ú³õÊ¼»¯ 
+//	LED_Init();		  	 //³õÊ¼»¯ÓëLEDÁ¬½ÓµÄÓ²¼þ½Ó¿Ú
 												   
+    gpio_init();
 	OLED_Init();			//³õÊ¼»¯Òº¾§      
  	OLED_ShowString(0,0, "0.96' OLED TEST");  
  	OLED_ShowString(0,16,"ATOM@ALIENTEK");  
@@ -61,6 +76,12 @@ int main(void)
  	OLED_ShowString(63,48,"CODE:");  
 	OLED_Refresh_Gram();	 
 	t=' ';  
+    delay_ms(2000);
+#if 1
+    PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFE);
+#else
+    Sys_Standby();
+#endif
 	while(1) 
 	{		
 		OLED_ShowChar(48,48,t,16,1);//ÏÔÊ¾ASCII×Ö·û	   
